@@ -15,7 +15,7 @@ Hardware & Setup
 Model & Training Configuration
 Base model - LLaMA 3.2 3B Instruct, Quantization - 4-bit (NF4), LoRA rank (r) - 16, LoRA alpha - 16, LoRA dropout - 0, Target modules - q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj, Trainable parameters - 24,313,856 (0.75% of total), Epochs - 3, Learning rate - 2e-4, Optimizer - adamw_8bit, Precision - bfloat16
 
-Results
+Results ----------
 **Model Load Time**
 - HuggingFace: 197s
 - Unsloth: 107s
@@ -50,13 +50,13 @@ Results
 - HuggingFace: 1 (crashed at 2)
 - Unsloth: 2
 
-Why Unsloth Is Faster
+Why Unsloth Is Faster -----
 Standard HuggingFace runs each operation, matrix multiply, activation function, elementwise operations as a separate GPU kernel. Each kernel reads its inputs from slow HBM (main GPU memory), does its math, and writes its output back to HBM before the next kernel starts. These constant round trips between compute units and memory are the bottleneck.
 Unsloth replaces these standard operations with custom Triton kernels that fuse multiple operations together. Intermediate results stay in fast on-chip SRAM and are used immediately for the next operation without ever being written to HBM. This is applied to attention layers (QKV projections), MLP layers (gate/up/down projections), and LoRA operations. You can see this confirmed in the training log:
 Unsloth 2026.2.1 patched 28 layers with 28 QKV layers, 28 O layers and 28 MLP layers.
 All 28 layers were fully patched because LoRA dropout was set to 0. Unsloth cannot apply its fast kernels to layers with active dropout.
 
-Why VRAM Usage Is So Different
+Why VRAM Usage Is So Different --------
 The baseline reserved 17.31 GB of VRAM on an 8 GB card, it was spilling heavily into system memory via CUDA unified memory, which is extremely slow. This is because standard gradient checkpointing stores all forward pass activations in VRAM throughout training so they are available during the backward pass.
 Unsloth uses a smarter approach: it recomputes activations on the fly during the backward pass instead of storing them upfront. It also smartly offloads gradients when they are not immediately needed:
 Unsloth: Will smartly offload gradients to save VRAM!
