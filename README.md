@@ -60,7 +60,7 @@ Why VRAM Usage Is So Different --------
 The baseline reserved 17.31 GB of VRAM on an 8 GB card, it was spilling heavily into system memory via CUDA unified memory, which is extremely slow. This is because standard gradient checkpointing stores all forward pass activations in VRAM throughout training so they are available during the backward pass.
 Unsloth uses a smarter approach: it recomputes activations on the fly during the backward pass instead of storing them upfront. It also smartly offloads gradients when they are not immediately needed:
 Unsloth: Will smartly offload gradients to save VRAM!
-The result is peak VRAM of 4.60 GB and a reserved buffer of only 4.81 GB — well within the GPU's 7.96 GB limit, with no spill into system memory.
+The result is peak VRAM of 4.60 GB and a reserved buffer of only 4.81 GB, well within the GPU's 7.96 GB limit, with no spill into system memory.
 
 Files
 fine_tuning.py -- Unsloth fine-tuning script with VRAM and time, fine_tuning_witoutunsloth.py -- Standard HuggingFace + PEFT baseline with matching metrics
